@@ -1,0 +1,29 @@
+header {
+  background-color: #003580;
+  color: white;
+  padding: 10px 0;
+  text-align: center;
+  height: 100px;
+}
+nav a {
+  color: white;
+  margin: 0 15px;
+  text-decoration: none;
+  font-weight: bold;
+  font: 1em sans-serif;
+}
+nav a.active {
+  text-decoration: underline;
+}
+main {
+  padding: 20px;
+}
+footer {
+  background-color: #003580;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
