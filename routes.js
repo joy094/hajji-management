@@ -338,4 +338,104 @@ router.get("/reports/bank-statement/:id", async (req, res) => {
   }
 });
 
+/* =====================================================
+   Agency Ledger Report (Powerful)
+===================================================== */
+
+router.get("/reports/agency-ledger/:agencyId", async (req, res) => {
+  try {
+    const { agencyId } = req.params;
+
+    // All statements where allocation exists for this agency
+    const allocations = await PaymentAllocation.find({ agency: agencyId })
+      .populate("hajji")
+      .populate("statement")
+      .populate("agency");
+
+    if (!allocations.length) {
+      return res.json([]);
+    }
+
+    // Group by statement
+    const ledgerMap = {};
+
+    allocations.forEach((a) => {
+      const st = a.statement;
+
+      if (!ledgerMap[st._id]) {
+        ledgerMap[st._id] = {
+          statementId: st._id,
+          statementNo: st.statementNo,
+          bankName: st.bankName,
+          statementDate: st.statementDate,
+          totalAmount: st.totalAmount,
+          allocatedAmount: st.allocatedAmount,
+          hajjiList: [],
+        };
+      }
+
+      ledgerMap[st._id].hajjiList.push({
+        hajjiId: a.hajji._id,
+        name: a.hajji.fullName,
+        amount: a.amount,
+      });
+    });
+
+    res.json(Object.values(ledgerMap));
+  } catch (err) {
+    console.error("Agency Ledger Error:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/* =====================================================
+   Agency Ledger Report (Powerful)
+===================================================== */
+
+router.get("/reports/agency-ledger/:agencyId", async (req, res) => {
+  try {
+    const { agencyId } = req.params;
+
+    // All statements where allocation exists for this agency
+    const allocations = await PaymentAllocation.find({ agency: agencyId })
+      .populate("hajji")
+      .populate("statement")
+      .populate("agency");
+
+    if (!allocations.length) {
+      return res.json([]);
+    }
+
+    // Group by statement
+    const ledgerMap = {};
+
+    allocations.forEach((a) => {
+      const st = a.statement;
+
+      if (!ledgerMap[st._id]) {
+        ledgerMap[st._id] = {
+          statementId: st._id,
+          statementNo: st.statementNo,
+          bankName: st.bankName,
+          statementDate: st.statementDate,
+          totalAmount: st.totalAmount,
+          allocatedAmount: st.allocatedAmount,
+          hajjiList: [],
+        };
+      }
+
+      ledgerMap[st._id].hajjiList.push({
+        hajjiId: a.hajji._id,
+        name: a.hajji.fullName,
+        amount: a.amount,
+      });
+    });
+
+    res.json(Object.values(ledgerMap));
+  } catch (err) {
+    console.error("Agency Ledger Error:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 export default router;

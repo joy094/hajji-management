@@ -3,35 +3,50 @@ import { useParams } from "react-router-dom";
 
 export default function AgencyProfile() {
   const { id } = useParams();
+
   const [agency, setAgency] = useState(null);
   const [hajjis, setHajjis] = useState([]);
-  const [statements, setStatements] = useState([]);
+  const [ledger, setLedger] = useState([]);
 
+  /* =============================
+     Load Agency + Hajji + Ledger
+  ============================== */
   useEffect(() => {
+    // Agency basic info + hajji under agency
     fetch(`http://localhost:5000/api/agencies/${id}`)
       .then((res) => res.json())
-      .then(setAgency);
+      .then((data) => {
+        setAgency(data.agency);
+        setHajjis(data.hajji || []);
+      });
 
-    fetch(`http://localhost:5000/api/hajji?agency=${id}`)
+    // Agency Ledger (Statement wise)
+    fetch(`http://localhost:5000/api/reports/agency-ledger/${id}`)
       .then((res) => res.json())
-      .then(setHajjis);
-
-    fetch(`http://localhost:5000/api/statements?agency=${id}`)
-      .then((res) => res.json())
-      .then(setStatements);
+      .then(setLedger);
   }, [id]);
 
   if (!agency) return <p>Loading...</p>;
 
+  /* =============================
+     Calculations
+  ============================== */
   const totalPackage = hajjis.reduce((s, h) => s + h.packageAmount, 0);
   const totalPaid = hajjis.reduce((s, h) => s + h.paidAmount, 0);
   const totalDue = totalPackage - totalPaid;
 
+  /* =============================
+     Print Handler
+  ============================== */
+  const printStatement = () => {
+    window.print();
+  };
+
   return (
     <div className="agency-profile">
-      <h2>{agency.name} – Profile</h2>
+      <h2>{agency.name} – Agency Profile</h2>
 
-      {/* Summary */}
+      {/* ================= SUMMARY ================= */}
       <div className="summary">
         <div className="card">
           Total Hajji
@@ -52,8 +67,8 @@ export default function AgencyProfile() {
         </div>
       </div>
 
-      {/* Hajji Table */}
-      <h3>Hajji Status</h3>
+      {/* ================= HAJJI TABLE ================= */}
+      <h3>Hajji List</h3>
       <table>
         <thead>
           <tr>
@@ -74,33 +89,64 @@ export default function AgencyProfile() {
               <td>{h.status}</td>
             </tr>
           ))}
-        </tbody>
-      </table>
-
-      {/* Statement Summary */}
-      <h3>Bank Statements</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Statement No</th>
-            <th>Total Amount</th>
-            <th>Allocated</th>
-            <th>Adjustment</th>
-          </tr>
-        </thead>
-        <tbody>
-          {statements.map((s) => (
-            <tr key={s._id}>
-              <td>{s.statementNo}</td>
-              <td>{s.totalAmount}</td>
-              <td>{s.allocatedAmount}</td>
-              <td>{s.adjustmentAmount || 0}</td>
+          {hajjis.length === 0 && (
+            <tr>
+              <td colSpan="5" style={{ textAlign: "center" }}>
+                No Hajji Found
+              </td>
             </tr>
-          ))}
+          )}
         </tbody>
       </table>
 
-      {/* PURE CSS */}
+      {/* ================= LEDGER ================= */}
+      <h3>Payment Ledger (Statement / Receipt Wise)</h3>
+
+      {ledger.length === 0 && <p>No payment record found.</p>}
+
+      {ledger.map((s) => (
+        <div key={s.statementId} className="statement-box">
+          <div className="statement-header">
+            <div>
+              <strong>Statement / Receipt:</strong> {s.statementNo}
+              <br />
+              <strong>Bank:</strong> {s.bankName}
+              <br />
+              <strong>Date:</strong>{" "}
+              {new Date(s.statementDate).toLocaleDateString()}
+            </div>
+
+            <div>
+              <strong>Total:</strong> ৳ {s.totalAmount}
+              <br />
+              <strong>Allocated:</strong> ৳ {s.allocatedAmount}
+            </div>
+          </div>
+
+          <table className="inner-table">
+            <thead>
+              <tr>
+                <th>Hajji Name</th>
+                <th>Allocated Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {s.hajjiList.map((h) => (
+                <tr key={h.hajjiId}>
+                  <td>{h.name}</td>
+                  <td>৳ {h.amount}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+
+      <button className="print-btn" onClick={printStatement}>
+        🖨 Print Report
+      </button>
+
+      {/* ================= PURE CSS ================= */}
       <style>{`
         .agency-profile {
           background: #fff;
@@ -148,6 +194,41 @@ export default function AgencyProfile() {
 
         h3 {
           margin-top: 25px;
+        }
+
+        .statement-box {
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          padding: 10px;
+          margin-top: 15px;
+        }
+
+        .statement-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+          font-size: 14px;
+        }
+
+        .inner-table th {
+          background: #f1f3f5;
+        }
+
+        .print-btn {
+          margin-top: 20px;
+          padding: 10px 15px;
+          border: none;
+          background: #0d6efd;
+          color: white;
+          border-radius: 5px;
+          cursor: pointer;
+          font-weight: 600;
+        }
+
+        @media print {
+          .print-btn {
+            display: none;
+          }
         }
       `}</style>
     </div>
