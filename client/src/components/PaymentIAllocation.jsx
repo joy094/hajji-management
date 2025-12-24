@@ -299,8 +299,15 @@ export default function PaymentAllocation() {
         <label>Total Amount to Allocate:</label>
         <input
           type="number"
+          className="no-spin"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
+          inputMode="numeric"
+          onWheel={(e) => e.currentTarget.blur()}
+          onKeyDown={(e) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown")
+              e.preventDefault();
+          }}
         />
       </div>
 
@@ -398,6 +405,16 @@ export default function PaymentAllocation() {
         }
         .form-group input::placeholder { color: var(--muted-2); }
         .form-group input:focus, .form-group select:focus { outline:none; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(12,46,120,0.08); border-color: rgba(96,165,250,0.12); }
+
+        /* Hide number input spinners for the Total Amount input */
+        input.no-spin::-webkit-outer-spin-button,
+        input.no-spin::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input.no-spin { -moz-appearance: textfield; }
+        input.no-spin:focus { outline: none; }
+        /* Prevent accidental wheel changes by blurring on wheel - handled via onWheel handler */
 
         .hajji-table { width:100%; border-collapse:separate; border-spacing:0 10px; margin-top:18px; }
         .hajji-table th { text-align:left; padding:10px 8px; color:var(--muted); font-weight:700; }
