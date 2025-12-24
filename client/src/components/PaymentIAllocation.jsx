@@ -344,12 +344,19 @@ export default function PaymentAllocation() {
                 <td>
                   <input
                     type="number"
+                    className="no-spin"
+                    inputMode="numeric"
                     min="0"
                     max={Math.max(0, h.packageAmount - h.paidAmount)}
                     value={
                       allocations.find((a) => a.hajjiId === h._id)?.amount || ""
                     }
                     onChange={(e) => handleAmountChange(h._id, e.target.value)}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowUp" || e.key === "ArrowDown")
+                        e.preventDefault();
+                    }}
                     disabled={!selectedHajjis.includes(h._id)}
                   />
                 </td>
