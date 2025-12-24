@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function AddHajji() {
@@ -36,6 +35,7 @@ export default function AddHajji() {
       })
       .then((h) => {
         if (h) {
+          console.debug("Loaded Hajji for edit:", h);
           setForm({
             fullName: h.fullName,
             passportNumber: h.passportNumber,
@@ -66,14 +66,28 @@ export default function AddHajji() {
 
     const method = id ? "PUT" : "POST";
 
-    await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          packageAmount: parseFloat(form.packageAmount) || 0,
+        }),
+      });
 
-    toast.success(id ? "Hajji Updated" : "Hajji Added");
-    navigate("/hajji");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        alert(data.error || "Failed to save Hajji");
+        return;
+      }
+
+      alert(id ? "Hajji Updated" : "Hajji Added");
+      navigate("/hajji");
+    } catch (err) {
+      console.error("Error saving Hajji:", err);
+      alert("Network error while saving Hajji");
+    }
   };
 
   return (

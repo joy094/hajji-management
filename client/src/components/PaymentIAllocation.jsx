@@ -9,7 +9,7 @@ export default function PaymentAllocation() {
   const [transactionId, setTransactionId] = useState("");
   const [mobileBank, setMobileBank] = useState("");
   const [receiptName, setReceiptName] = useState("");
-  const [amount, setAmount] = useState(0); // Total allocated amount
+  const [amount, setAmount] = useState(""); // Total allocated amount (empty by default)
   const [hajjiList, setHajjiList] = useState([]);
   const [allocations, setAllocations] = useState([]);
   const [selectedHajjis, setSelectedHajjis] = useState([]);
@@ -116,7 +116,7 @@ export default function PaymentAllocation() {
     );
     setAllocations((prev) => {
       if (!prev.find((a) => a.hajjiId === hajjiId)) {
-        return [...prev, { hajjiId, amount: 0 }];
+        return [...prev, { hajjiId, amount: "" }];
       }
       return prev;
     });
@@ -126,25 +126,41 @@ export default function PaymentAllocation() {
   const handleAmountChange = (hajjiId, value) => {
     setAllocations((prev) =>
       prev.map((a) =>
-        a.hajjiId === hajjiId ? { ...a, amount: parseFloat(value) || 0 } : a
+        a.hajjiId === hajjiId
+          ? { ...a, amount: value === "" ? "" : parseFloat(value) || 0 }
+          : a
       )
     );
   };
 
   // Handle Submit
   const handleSubmit = async () => {
-    if (!paymentType) return alert("Select Payment Type");
+    if (!paymentType) {
+      alert("Select Payment Type");
+      return;
+    }
 
-    if (selectedHajjis.length === 0) return alert("Select at least one Hajji");
+    if (selectedHajjis.length === 0) {
+      alert("Select at least one Hajji");
+      return;
+    }
 
+    // compute totalAllocated (treat blank as 0)
     const totalAllocated = allocations
       .filter((a) => selectedHajjis.includes(a.hajjiId))
-      .reduce((s, a) => s + a.amount, 0);
+      .reduce((s, a) => s + (parseFloat(a.amount) || 0), 0);
+
+    // Validate total amount is provided
+    if (amount === "" || isNaN(parseFloat(amount))) {
+      alert("Enter the total amount to allocate");
+      return;
+    }
 
     if (totalAllocated !== parseFloat(amount)) {
-      return alert(
+      alert(
         `Allocated sum (${totalAllocated}) does not match the total amount (${amount})`
       );
+      return;
     }
 
     const payload = {
@@ -155,17 +171,24 @@ export default function PaymentAllocation() {
     };
 
     if (paymentType === "bank") {
-      if (!statementNo || !bankName)
-        return alert("Statement No & Bank Name required");
+      if (!statementNo || !bankName) {
+        alert("Statement No & Bank Name required");
+        return;
+      }
       payload.statementNo = statementNo;
       payload.bankName = bankName;
     } else if (paymentType === "mobile") {
-      if (!transactionId || !mobileBank)
-        return alert("Transaction ID & Mobile Bank required");
+      if (!transactionId || !mobileBank) {
+        alert("Transaction ID & Mobile Bank required");
+        return;
+      }
       payload.transactionId = transactionId;
       payload.mobileBank = mobileBank;
     } else if (paymentType === "cash") {
-      if (!receiptName) return alert("Receipt Number required");
+      if (!receiptName) {
+        alert("Receipt Number required");
+        return;
+      }
       payload.receiptName = receiptName;
     }
 
@@ -185,7 +208,7 @@ export default function PaymentAllocation() {
       setReceiptName("");
       setAllocations([]);
       setSelectedHajjis([]);
-      setAmount(0);
+      setAmount("");
     } catch (err) {
       const msg = err.response?.data?.error || "Error allocating payment";
       // Play special error sound for backend messages indicating 'already used' (case-insensitive)
@@ -277,7 +300,7 @@ export default function PaymentAllocation() {
         <input
           type="number"
           value={amount}
-          onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+          onChange={(e) => setAmount(e.target.value)}
         />
       </div>
 
@@ -315,7 +338,7 @@ export default function PaymentAllocation() {
                   <input
                     type="number"
                     min="0"
-                    max={h.packageAmount - h.paidAmount}
+                    max={Math.max(0, h.packageAmount - h.paidAmount)}
                     value={
                       allocations.find((a) => a.hajjiId === h._id)?.amount || ""
                     }

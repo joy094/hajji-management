@@ -11,9 +11,13 @@ const Reports = () => {
 
   useEffect(() => {
     // Fetch Hajji list
-    axios.get("http://localhost:5000/api/hajji").then((res) => setHajjiList(res.data || []));
+    axios
+      .get("http://localhost:5000/api/hajji")
+      .then((res) => setHajjiList(res.data || []));
     // Fetch Agency list
-    axios.get("http://localhost:5000/api/agencies").then((res) => setAgencyList(res.data || []));
+    axios
+      .get("http://localhost:5000/api/agencies")
+      .then((res) => setAgencyList(res.data || []));
     // Fetch Bank Statements
     axios
       .get("http://localhost:5000/api/statements")
@@ -21,11 +25,16 @@ const Reports = () => {
   }, []);
 
   const generateReport = () => {
-    if (!reportType || !selectedId) return alert("Please select type & item");
+    if (!reportType || !selectedId) {
+      alert("Please select type & item");
+      return;
+    }
 
     let url = "";
-    if (reportType === "hajji") url = `http://localhost:5000/api/reports/hajji-ledger/${selectedId}`;
-    else if (reportType === "agency") url = `http://localhost:5000/api/agencies/${selectedId}`;
+    if (reportType === "hajji")
+      url = `http://localhost:5000/api/reports/hajji-ledger/${selectedId}`;
+    else if (reportType === "agency")
+      url = `http://localhost:5000/api/agencies/${selectedId}`;
     else if (reportType === "statement")
       url = `http://localhost:5000/api/reports/bank-statement/${selectedId}`;
 
