@@ -5,13 +5,13 @@ import { Outlet } from "react-router-dom";
 import Dashboard from "./components/Dashboard";
 import AgencyList from "./components/AgencyList";
 import HajjiList from "./components/HajjiList";
-import PaymentAllocation from "./components/PaymentIallocation";
+import PaymentAllocation from "./components/PaymentIAllocation";
 import Adjustments from "./components/Adjustments";
 import Reports from "./components/Reports";
 import AgencyProfile from "./components/AgencyProfile";
 import AddAgency from "./components/AddAgency";
 import AddHajji from "./components/AddHajji";
-
+import NotificationSounds from "./components/NotificationSounds";
 
 //About page
 const About = () => {
@@ -41,10 +41,10 @@ const Header = () => {
         </NavLink>
 
         <NavLink to="/agency-list" className="nav-link">
-          Agency 
+          Agency
         </NavLink>
         <NavLink to="/hajji" className="nav-link">
-          Hajji 
+          Hajji
         </NavLink>
 
         <NavLink to="/payment-allocation" className="nav-link">
@@ -57,8 +57,6 @@ const Header = () => {
         <NavLink to="/reports" className="nav-link">
           Reports
         </NavLink>
-
-
       </nav>
     </header>
   );
@@ -69,8 +67,10 @@ const Header = () => {
 const Footer = () => {
   return (
     <footer className="footer">
-      <h1>Mashum Air Travells <br />
-        All Rights Reserved © 2025</h1>
+      <h1>
+        Mashum Air Travells <br />
+        All Rights Reserved © 2025
+      </h1>
     </footer>
   );
 };
@@ -79,6 +79,7 @@ const Footer = () => {
 export const Layout = ({ children }) => {
   return (
     <div>
+      <NotificationSounds />
       <Header />
       <main>
         <Outlet />
@@ -105,14 +106,11 @@ const App = () => {
           <Route path="/agency-list" element={<AgencyList />} />
           <Route path="/agency/:id" element={<AgencyProfile />} />
 
-
-
-
           <Route path="/agencies/new" element={<AddAgency />} />
-<Route path="/agencies/:id/edit" element={<AddAgency />} />
-<Route path="/agencies/:id" element={<AgencyProfile />} />
+          <Route path="/agencies/:id/edit" element={<AddAgency />} />
+          <Route path="/agencies/:id" element={<AgencyProfile />} />
           <Route path="/hajji" element={<HajjiList />} />
-  <Route path="/hajji/new" element={<AddHajji />} />
+          <Route path="/hajji/new" element={<AddHajji />} />
           <Route path="/payment-allocation" element={<PaymentAllocation />} />
 
           <Route path="/reports" element={<Reports />} />

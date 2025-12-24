@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 
 export default function AddHajji() {
@@ -28,22 +29,27 @@ export default function AddHajji() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`http://localhost:5000/api/hajji`)
-      .then((res) => res.json())
-      .then((data) => {
-        const h = data.find((x) => x._id === id);
+    fetch(`http://localhost:5000/api/hajji/${id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load Hajji");
+        return res.json();
+      })
+      .then((h) => {
         if (h) {
           setForm({
             fullName: h.fullName,
             passportNumber: h.passportNumber,
             address: h.address || "",
             mobile: h.mobile || "",
-            agency: h.agency?._id,
+            agency: h.agency?._id || h.agency || "",
             packageAmount: h.packageAmount,
             status: h.status,
             notes: h.notes || "",
           });
         }
+      })
+      .catch((err) => {
+        console.error("Error loading Hajji:", err);
       });
   }, [id]);
 
@@ -66,7 +72,7 @@ export default function AddHajji() {
       body: JSON.stringify(form),
     });
 
-    alert(id ? "Hajji Updated" : "Hajji Added");
+    toast.success(id ? "Hajji Updated" : "Hajji Added");
     navigate("/hajji");
   };
 

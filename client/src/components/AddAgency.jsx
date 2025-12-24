@@ -20,13 +20,18 @@ export default function AddAgency() {
     fetch(`http://localhost:5000/api/agencies/${id}`)
       .then((res) => res.json())
       .then((data) => {
+        // Server returns { agency, hajji }
+        const agency = data?.agency || data || {};
         setForm({
-          name: data.name || "",
-          contactPerson: data.contactPerson || "",
-          mobile: data.mobile || "",
-          address: data.address || "",
-          notes: data.notes || "",
+          name: agency.name || "",
+          contactPerson: agency.contactPerson || "",
+          mobile: agency.mobile || "",
+          address: agency.address || "",
+          notes: agency.notes || "",
         });
+      })
+      .catch((err) => {
+        console.error("Error loading agency:", err);
       });
   }, [id]);
 

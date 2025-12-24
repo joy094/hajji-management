@@ -59,6 +59,33 @@ router.get("/agencies/:id", async (req, res) => {
   res.json({ agency, hajji });
 });
 
+// Update Agency
+router.put("/agencies/:id", async (req, res) => {
+  try {
+    const agency = await Agency.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
+    res.json(agency);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Delete Agency (unset agency on Hajji records)
+router.delete("/agencies/:id", async (req, res) => {
+  try {
+    await Agency.findByIdAndDelete(req.params.id);
+    // Unlink agency from hajjis rather than deleting hajji records
+    await Hajji.updateMany(
+      { agency: req.params.id },
+      { $unset: { agency: "" } }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 /* =====================================================
    2️⃣ HAJJI CONTROLLERS
 ===================================================== */
@@ -77,6 +104,17 @@ router.post("/hajji", async (req, res) => {
 router.get("/hajji", async (req, res) => {
   const list = await Hajji.find().populate("agency");
   res.json(list);
+});
+
+// Get Single Hajji
+router.get("/hajji/:id", async (req, res) => {
+  try {
+    const hajji = await Hajji.findById(req.params.id).populate("agency");
+    if (!hajji) return res.status(404).json({ error: "Hajji not found" });
+    res.json(hajji);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
 });
 
 // Update Hajji
@@ -434,6 +472,35 @@ router.get("/reports/agency-ledger/:agencyId", async (req, res) => {
     res.json(Object.values(ledgerMap));
   } catch (err) {
     console.error("Agency Ledger Error:", err.message);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Recent Payments (latest 10)
+router.get("/payments/recent", async (req, res) => {
+  try {
+    const payments = await PaymentAllocation.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("agency")
+      .populate("statement");
+    res.json(payments);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// Recent Hajji Registrations (latest 10)
+router.get("/hajji/recent", async (req, res) => {
+  try {
+    const hajjis = await Hajji.find()
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .populate("agency");
+    res.json(hajjis);
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Server error" });
   }
 });

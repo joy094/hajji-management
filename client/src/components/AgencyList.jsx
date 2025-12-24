@@ -55,7 +55,7 @@ export default function AgencyList() {
               <td>{a.name}</td>
               <td>{a.contactPerson || "-"}</td>
               <td>{a.mobile || "-"}</td>
-              <td>{a.hajjiCount || 0}</td>
+              <td>{a.totalHajji ?? 0}</td>
               <td className="actions">
                 <button
                   className="view"

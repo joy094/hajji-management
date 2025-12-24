@@ -17,6 +17,7 @@ export default function PaymentAllocation() {
   // custom select state & options
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const selectRef = useRef(null);
+  const errorAudioRef = useRef(null);
   const paymentOptions = [
     {
       value: "",
@@ -186,7 +187,17 @@ export default function PaymentAllocation() {
       setSelectedHajjis([]);
       setAmount(0);
     } catch (err) {
-      alert(err.response?.data?.error || "Error allocating payment");
+      const msg = err.response?.data?.error || "Error allocating payment";
+      // Play special error sound for backend messages indicating 'already used' (case-insensitive)
+      try {
+        if (msg && /already\s+use(d)?/i.test(msg.toString())) {
+          console.debug("Notification: playing error sound for message:", msg);
+          await errorAudioRef.current?.play();
+        }
+      } catch (playErr) {
+        console.warn("Failed to play error sound:", playErr);
+      }
+      alert(msg);
       console.error(err);
     }
   };
@@ -325,6 +336,8 @@ export default function PaymentAllocation() {
       <button className="submit-btn" onClick={handleSubmit}>
         Allocate Payment
       </button>
+      {/* Hidden audio element for backend notifications (e.g., "No already Use") */}
+      <audio ref={errorAudioRef} src="/sounds/error.mp3" preload="auto" />
 
       {/* PURE CSS - box-shadow design */}
       <style>{`

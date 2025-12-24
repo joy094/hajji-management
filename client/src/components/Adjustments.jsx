@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 
 export default function Adjustments() {
   const [statements, setStatements] = useState([]);
@@ -28,14 +29,14 @@ export default function Adjustments() {
 
   const submitAdjustment = async () => {
     if (!selectedStatement || !reason) {
-      alert("Statement ও Reason বাধ্যতামূলক");
+      toast.error("Statement ও Reason বাধ্যতামূলক");
       return;
     }
 
     const entries = Object.entries(amounts).filter(([_, amt]) => amt !== 0);
 
     if (entries.length === 0) {
-      alert("কমপক্ষে এক জন হাজির adjustment দিন");
+      toast.error("কমপক্ষে এক জন হাজির adjustment দিন");
       return;
     }
 
@@ -53,7 +54,7 @@ export default function Adjustments() {
       });
     }
 
-    alert("Adjustment Completed");
+    toast.success("Adjustment Completed");
     setAmounts({});
     setReason("");
     setNote("");
