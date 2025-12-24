@@ -145,89 +145,208 @@ export default function AgencyProfile() {
       <button className="print-btn" onClick={printStatement}>
         🖨 Print Report
       </button>
+      
 
       {/* ================= PURE CSS ================= */}
       <style>{`
         .agency-profile {
-          background: #fff;
-          padding: 20px;
-          border-radius: 8px;
+          background: #f8f9fa;
+          padding: 30px;
+          border-radius: 10px;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         h2 {
+          margin-bottom: 25px;
+          color: #2c3e50;
+          font-size: 28px;
+          border-bottom: 3px solid #0d6efd;
+          padding-bottom: 10px;
+        }
+
+        h3 {
+          margin-top: 30px;
           margin-bottom: 15px;
+          color: #34495e;
+          font-size: 18px;
+          font-weight: 600;
         }
 
         .summary {
           display: grid;
-          grid-template-columns: repeat(4, 1fr);
-          gap: 10px;
-          margin-bottom: 20px;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+          margin-bottom: 30px;
         }
 
         .card {
-          background: #f8f9fa;
-          padding: 15px;
-          border-radius: 6px;
+          background: linear-gradient(135deg, #2b7ed2 0%, #1e5aa8 100%);
+          padding: 20px;
+          border-radius: 8px;
           text-align: center;
-          font-weight: 600;
+          font-weight: 700;
+          color: white;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
 
         .card.paid {
-          background: #d1e7dd;
+          background: linear-gradient(135deg, #2cd78a 0%, #1aa85a 100%);
         }
 
         .card.due {
-          background: #f8d7da;
+          background: linear-gradient(135deg, #da3636 0%, #b52a2a 100%);
         }
 
         table {
           width: 100%;
-          border-collapse: collapse;
-          margin-top: 10px;
+          border-collapse: separate;
+          border-spacing: 0;
+          margin-top: 15px;
+          background: white;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        th, td {
-          padding: 8px;
-          border-bottom: 1px solid #ddd;
+        thead {
+          background: linear-gradient(135deg, #0d6efd 0%, #0856ca 100%);
         }
 
-        h3 {
-          margin-top: 25px;
+        th {
+          padding: 12px 16px;
+          text-align: left;
+          font-weight: 600;
+          color: white;
+          border: none;
+        }
+
+        td {
+          padding: 12px 16px;
+          border-bottom: 1px solid #e9ecef;
+          color: #495057;
+        }
+
+        tbody tr {
+          transition: background-color 0.2s;
+        }
+
+        tbody tr:hover {
+          background-color: #f8f9fa;
+        }
+
+        tbody tr:last-child td {
+          border-bottom: none;
         }
 
         .statement-box {
-          border: 1px solid #ddd;
-          border-radius: 6px;
-          padding: 10px;
-          margin-top: 15px;
+          border: 2px solid #e9ecef;
+          border-radius: 8px;
+          padding: 20px;
+          margin-top: 20px;
+          background: white;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
         .statement-header {
           display: flex;
           justify-content: space-between;
-          margin-bottom: 10px;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #e9ecef;
           font-size: 14px;
+          gap: 20px;
+        }
+
+        .statement-header strong {
+          color: #2c3e50;
+        }
+
+        .statement-header div {
+          flex: 1;
+          line-height: 1.8;
+        }
+
+        .inner-table {
+          margin-top: 10px;
         }
 
         .inner-table th {
-          background: #f1f3f5;
+          background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+          font-size: 13px;
+        }
+
+        .inner-table td {
+          font-size: 14px;
         }
 
         .print-btn {
-          margin-top: 20px;
-          padding: 10px 15px;
+          display: block;
+          margin-top: 30px;
+          padding: 12px 25px;
           border: none;
-          background: #0d6efd;
+          background: linear-gradient(135deg, #0d6efd 0%, #0856ca 100%);
           color: white;
-          border-radius: 5px;
+          border-radius: 6px;
           cursor: pointer;
           font-weight: 600;
+          font-size: 14px;
+          transition: all 0.3s;
+          box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3);
+        }
+
+        .print-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
+        }
+
+        .print-btn:active {
+          transform: translateY(0);
+        }
+
+        @media (max-width: 768px) {
+          .agency-profile {
+            padding: 20px;
+          }
+
+          h2 {
+            font-size: 22px;
+          }
+
+          .summary {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          .statement-header {
+            flex-direction: column;
+          }
+
+          table {
+            font-size: 13px;
+          }
+
+          th, td {
+            padding: 10px 12px;
+          }
         }
 
         @media print {
           .print-btn {
             display: none;
+          }
+
+          .agency-profile {
+            padding: 0;
+            background: white;
+          }
+
+          .statement-box {
+            page-break-inside: avoid;
           }
         }
       `}</style>

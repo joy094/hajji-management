@@ -41,10 +41,10 @@ const Header = () => {
         </NavLink>
 
         <NavLink to="/agency-list" className="nav-link">
-          Agency List
+          Agency 
         </NavLink>
         <NavLink to="/hajji" className="nav-link">
-          Hajji list
+          Hajji 
         </NavLink>
 
         <NavLink to="/payment-allocation" className="nav-link">
@@ -69,7 +69,8 @@ const Header = () => {
 const Footer = () => {
   return (
     <footer className="footer">
-      <h1>All Rights Reserved © 2025</h1>
+      <h1>Mashum Air Travells <br />
+        All Rights Reserved © 2025</h1>
     </footer>
   );
 };

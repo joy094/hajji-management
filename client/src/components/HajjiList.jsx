@@ -9,18 +9,38 @@ export default function HajjiList() {
 
   // Load Hajji & Agencies
   const loadHajjis = () => {
-    let url = "http://localhost:5000/api/hajji";
-    if (filterAgency) url += `?agency=${filterAgency}`;
+    const url = "http://localhost:5000/api/hajji";
 
     fetch(url)
       .then((res) => res.json())
-      .then(setHajjis);
+      .then((data) => {
+        const list = Array.isArray(data) ? data : [];
+        if (filterAgency) {
+          // Backend may or may not support agency filtering consistently.
+          // Apply a client-side fallback filter to ensure UI works.
+          const filtered = list.filter((h) => {
+            const agencyId = h.agency?._id ?? h.agency?.id ?? h.agency;
+            return String(agencyId) === String(filterAgency);
+          });
+          setHajjis(filtered);
+        } else {
+          setHajjis(list);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading hajjis:", err);
+        setHajjis([]);
+      });
   };
 
   const loadAgencies = () => {
     fetch("http://localhost:5000/api/agencies")
       .then((res) => res.json())
-      .then(setAgencies);
+      .then(setAgencies)
+      .catch((err) => {
+        console.error("Error loading agencies:", err);
+        setAgencies([]);
+      });
   };
 
   useEffect(() => {
@@ -112,74 +132,58 @@ export default function HajjiList() {
         </tbody>
       </table>
 
-      {/* ================= PURE CSS ================= */}
+      {/* ================= PURE CSS (Clean Box-Shadow Design) ================= */}
       <style>{`
-        .top-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 12px;
+        /* Palette */
+        :root{ --bg-0:#0f1724; --card:#ffffff; --muted:#e6eef8; --accent:#6c5ce7; --accent-2:#ff7aa2; }
+
+        .hajji-list {
+          position: relative;
+          padding: 18px;
+          border-radius: 12px;
+          background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,251,253,0.98));
+          color: #0b1220;
+          overflow: visible;
+          box-shadow: 0 8px 24px rgba(15,23,42,0.08), 0 2px 6px rgba(15,23,42,0.04) inset;
         }
 
-        .top-bar button {
-          padding: 6px 12px;
-          background: #198754;
-          color: #fff;
-          border: none;
-          border-radius: 5px;
-          font-weight: 600;
-          cursor: pointer;
-        }
+        .top-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+        .top-bar h2{ margin:0; font-size:18px; color:var(--muted); }
 
-        .filter-bar {
-          margin-bottom: 15px;
-        }
+        /* Primary button: simple elevated style */
+        .btn-primary{ display:inline-flex; align-items:center; gap:8px; padding:8px 14px; border-radius:10px; font-weight:700; color:#fff; border:none; cursor:pointer; background: linear-gradient(135deg,var(--accent) 0%, var(--accent-2) 100%); box-shadow: 0 8px 20px rgba(108,92,231,0.12); transition: box-shadow 160ms ease, transform 160ms ease; }
+        .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 32px rgba(108,92,231,0.18); }
+        .btn-primary:focus{ outline:none; box-shadow: 0 0 0 4px rgba(108,92,231,0.08); }
 
-        .filter-bar select {
-          padding: 5px 10px;
-          margin-left: 10px;
-          border-radius: 4px;
-          border: 1px solid #ccc;
-        }
+        .filter-bar{ display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+        .filter-bar label{ color:#0b1220; font-weight:600; }
 
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
+        /* Select: flat with crisp shadow */
+        .filter-bar select{ appearance:none; padding:8px 36px 8px 12px; border-radius:8px; border:1px solid rgba(15,23,42,0.06); background:#fff; color:#0b1220; box-shadow: 0 6px 18px rgba(12,16,26,0.06); background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%230b1220' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position: calc(100% - 12px) center; transition: box-shadow 160ms ease; }
+        .filter-bar select:focus{ box-shadow: 0 10px 28px rgba(12,46,120,0.08); border-color: rgba(96,165,250,0.12); outline:none; }
 
-        th {
-          background: #f1f3f5;
-          text-align: left;
-          padding: 10px;
-        }
+        /* Table: clear separation using spacing and drop shadows */
+        table{ width:100%; border-collapse:separate; border-spacing:0 12px; }
+        thead tr th{ color:#0b1220; font-weight:700; padding:10px 12px; text-align:left; }
 
-        td {
-          padding: 8px;
-          border-bottom: 1px solid #ddd;
-        }
+        tbody tr{ background:#fff; border-radius:10px; box-shadow: 0 6px 20px rgba(15,23,42,0.06); transition: box-shadow 160ms ease, transform 160ms ease; }
+        tbody tr:hover{ box-shadow: 0 16px 36px rgba(15,23,42,0.10); }
+        tbody td{ padding:12px 10px; border:none; color:#0b1220; }
 
-        .actions button {
-          margin-right: 5px;
-          padding: 4px 8px;
-          border: none;
-          border-radius: 4px;
-          font-size: 13px;
-          cursor: pointer;
-        }
+        /* Actions */
+        .actions button{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:8px; border:none; font-weight:700; cursor:pointer; transition: box-shadow 140ms ease, transform 140ms ease; }
+        .actions button:hover{ transform: translateY(-2px); }
+        .actions .edit{ background:#ffd966; color:#0b1220; box-shadow: 0 8px 18px rgba(255,193,7,0.08); }
+        .actions .delete{ background:#ff7b7b; color:#fff; box-shadow: 0 8px 18px rgba(220,53,69,0.08); }
 
-        .actions .edit {
-          background: #ffc107;
-          color: #000;
-        }
+        /* Empty state */
+        tbody tr.empty-row td{ text-align:center; padding:28px 12px; color:#667085; }
 
-        .actions .delete {
-          background: #dc3545;
-          color: #fff;
-        }
+        /* Responsive */
+        @media (max-width:820px){ .top-bar{ flex-direction:column; align-items:stretch; gap:12px } table{ border-spacing:0 8px } tbody td{ padding:10px 8px } }
 
-        .actions button:hover {
-          opacity: 0.85;
-        }
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce){ .filter-bar select, .btn-primary, tbody tr { transition:none !important; transform:none !important; animation:none !important; } }
       `}</style>
     </div>
   );

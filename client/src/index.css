@@ -1,29 +1,90 @@
+/* --- Global Styling Reset/Enhancements --- */
+body {
+    margin: 0; /* Remove default body margin */
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4; /* Light background for contrast */
+}
+
+/* --- 3D Gradient Header Styling --- */
 header {
-  background-color: #003580;
-  color: white;
-  padding: 10px 0;
-  text-align: center;
-  height: 100px;
+    /* 1. Gradient Background for Depth */
+    /* Simulates light hitting the top edge, creating a sheen */
+    background: linear-gradient(
+        to bottom,
+        #00439c, /* Darker blue at the top for depth */
+        #003580, /* Core brand blue */
+        #002860  /* Even darker blue at the bottom */
+    );
+    
+    color: white;
+    padding: 15px 0; /* Increased padding */
+    text-align: center;
+    height: 70px; /* Adjusted fixed height */
+    
+    /* 2. 3D Box Shadow for Lift */
+    /* The first shadow is a subtle lift, the second is a deep bottom shadow */
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.2), /* Soft, outward lift */
+        0 10px 20px rgba(0, 0, 0, 0.4); /* Stronger shadow for depth/3D effect */
+    
+    /* Optional: Add a subtle perspective/tilt for an even stronger 3D feel */
+    /* transform: perspective(1000px) rotateX(1deg); */
+    
+    /* Ensure the header is above everything else */
+    z-index: 100;
+    position: relative; /* Needed for z-index to work */
 }
+
+/* --- Navigation Styling --- */
+nav {
+    /* Center the navigation links */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%; /* Take up the full height of the header */
+}
+
 nav a {
-  color: white;
-  margin: 0 15px;
-  text-decoration: none;
-  font-weight: bold;
-  font: 1em sans-serif;
+    color: white;
+    margin: 0 25px; /* Increased margin for better spacing */
+    text-decoration: none;
+    font-weight: 600; /* Slightly bolder */
+    font-size: 18px; /* Consistent font size */
+    padding: 5px 10px; /* Padding for click area */
+    transition: color 0.3s, text-shadow 0.3s; /* Smooth transition */
 }
+
+/* Subtle Hover Effect */
+nav a:hover {
+    color: #a8c8ff; /* Lighter color on hover */
+    /* Text shadow gives a glowing/highlighted effect */
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.7);
+}
+
 nav a.active {
-  text-decoration: underline;
+    /* Underline the active link */
+    text-decoration: none; /* Removed default underline */
+    border-bottom: 3px solid #ffcc00; /* Bright accent color line */
+    padding-bottom: 2px;
 }
+
+/* --- Main Content Area --- */
 main {
-  padding: 20px;
+    padding: 20px;
+    min-height: calc(100vh - 170px); /* Calculate height based on header/footer */
 }
+
+/* --- Footer Styling --- */
 footer {
-  background-color: #003580;
-  color: white;
-  text-align: center;
-  padding: 10px 0;
-  position: fixed;
-  width: 100%;
-  bottom: 0;
+    background-color: #003580;
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+    /* Use fixed positioning for a sticky footer at the very bottom of the viewport */
+    position: sticky; 
+    width: 100%;
+    bottom: 0;
+    /* Match the header's 3D feel with an inset shadow */
+    box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.5); 
+    z-index: 99; /* Below the header, if applicable */
 }

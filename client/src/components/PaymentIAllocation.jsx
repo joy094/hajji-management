@@ -1,5 +1,5 @@
 // PaymentAllocation.jsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 export default function PaymentAllocation() {
@@ -9,42 +9,149 @@ export default function PaymentAllocation() {
   const [transactionId, setTransactionId] = useState("");
   const [mobileBank, setMobileBank] = useState("");
   const [receiptName, setReceiptName] = useState("");
+  const [amount, setAmount] = useState(0); // Total allocated amount
   const [hajjiList, setHajjiList] = useState([]);
   const [allocations, setAllocations] = useState([]);
+  const [selectedHajjis, setSelectedHajjis] = useState([]);
+
+  // custom select state & options
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const selectRef = useRef(null);
+  const paymentOptions = [
+    {
+      value: "",
+      label: "Select Type",
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#e6eef8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 5v14" />
+          <path d="M5 12h14" />
+        </svg>
+      ),
+    },
+    {
+      value: "bank",
+      label: "Bank",
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#e6eef8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="2" y="7" width="20" height="4" />
+          <path d="M5 11v6a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-6" />
+        </svg>
+      ),
+    },
+    {
+      value: "mobile",
+      label: "Mobile",
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#e6eef8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="7" y="2" width="10" height="20" rx="2" />
+          <path d="M11 18h2" />
+        </svg>
+      ),
+    },
+    {
+      value: "cash",
+      label: "Cash",
+      icon: (
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="#e6eef8"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="2" y="7" width="20" height="10" rx="2" />
+          <path d="M8 12h8" />
+        </svg>
+      ),
+    },
+  ];
 
   // Fetch Hajji List
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/hajji")
       .then((res) => {
-        console.log("Hajji API response:", res.data);
-        // safety check for array
         setHajjiList(Array.isArray(res.data) ? res.data : []);
       })
-      .catch((err) => {
-        console.error("Error fetching Hajji list:", err);
-      });
+      .catch((err) => console.error("Error fetching Hajji list:", err));
   }, []);
 
-  // Handle individual hajji allocation input
-  const handleAmountChange = (hajjiId, amount) => {
+  // Handle Hajji selection
+  const handleHajjiSelect = (hajjiId) => {
+    setSelectedHajjis((prev) =>
+      prev.includes(hajjiId)
+        ? prev.filter((id) => id !== hajjiId)
+        : [...prev, hajjiId]
+    );
     setAllocations((prev) => {
-      const existing = prev.find((a) => a.hajjiId === hajjiId);
-      if (existing) {
-        return prev.map((a) =>
-          a.hajjiId === hajjiId ? { ...a, amount: parseFloat(amount) || 0 } : a
-        );
-      } else {
-        return [...prev, { hajjiId, amount: parseFloat(amount) || 0 }];
+      if (!prev.find((a) => a.hajjiId === hajjiId)) {
+        return [...prev, { hajjiId, amount: 0 }];
       }
+      return prev;
     });
+  };
+
+  // Handle individual allocation input
+  const handleAmountChange = (hajjiId, value) => {
+    setAllocations((prev) =>
+      prev.map((a) =>
+        a.hajjiId === hajjiId ? { ...a, amount: parseFloat(value) || 0 } : a
+      )
+    );
   };
 
   // Handle Submit
   const handleSubmit = async () => {
     if (!paymentType) return alert("Select Payment Type");
 
-    const payload = { paymentType, allocations };
+    if (selectedHajjis.length === 0) return alert("Select at least one Hajji");
+
+    const totalAllocated = allocations
+      .filter((a) => selectedHajjis.includes(a.hajjiId))
+      .reduce((s, a) => s + a.amount, 0);
+
+    if (totalAllocated !== parseFloat(amount)) {
+      return alert(
+        `Allocated sum (${totalAllocated}) does not match the total amount (${amount})`
+      );
+    }
+
+    const payload = {
+      paymentType,
+      allocations: allocations.filter((a) =>
+        selectedHajjis.includes(a.hajjiId)
+      ),
+    };
 
     if (paymentType === "bank") {
       if (!statementNo || !bankName)
@@ -76,9 +183,10 @@ export default function PaymentAllocation() {
       setMobileBank("");
       setReceiptName("");
       setAllocations([]);
+      setSelectedHajjis([]);
+      setAmount(0);
     } catch (err) {
       alert(err.response?.data?.error || "Error allocating payment");
-
       console.error(err);
     }
   };
@@ -100,7 +208,6 @@ export default function PaymentAllocation() {
         </select>
       </div>
 
-      {/* Conditional Inputs */}
       {paymentType === "bank" && (
         <>
           <div className="form-group">
@@ -154,22 +261,43 @@ export default function PaymentAllocation() {
         </div>
       )}
 
-      {/* Hajji List Table */}
+      <div className="form-group">
+        <label>Total Amount to Allocate:</label>
+        <input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+        />
+      </div>
+
+      {/* Hajji List with Agency + Passport */}
       <h3>Hajji Allocation</h3>
       <table className="hajji-table">
         <thead>
           <tr>
+            <th>Select</th>
             <th>Name</th>
+            <th>Agency</th>
+            <th>Passport</th>
             <th>Package Amount</th>
             <th>Paid Amount</th>
             <th>Allocate Amount</th>
           </tr>
         </thead>
         <tbody>
-          {Array.isArray(hajjiList) && hajjiList.length > 0 ? (
+          {hajjiList.length > 0 ? (
             hajjiList.map((h) => (
               <tr key={h._id}>
+                <td>
+                  <input
+                    type="checkbox"
+                    checked={selectedHajjis.includes(h._id)}
+                    onChange={() => handleHajjiSelect(h._id)}
+                  />
+                </td>
                 <td>{h.fullName}</td>
+                <td>{h.agency?.name || "-"}</td>
+                <td>{h.passportNo || h.passportNumber || h.passport || "-"}</td>
                 <td>{h.packageAmount}</td>
                 <td>{h.paidAmount}</td>
                 <td>
@@ -181,13 +309,14 @@ export default function PaymentAllocation() {
                       allocations.find((a) => a.hajjiId === h._id)?.amount || ""
                     }
                     onChange={(e) => handleAmountChange(h._id, e.target.value)}
+                    disabled={!selectedHajjis.includes(h._id)}
                   />
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="4">No Hajji found</td>
+              <td colSpan="7">No Hajji found</td>
             </tr>
           )}
         </tbody>
@@ -197,56 +326,59 @@ export default function PaymentAllocation() {
         Allocate Payment
       </button>
 
-      {/* ================= Pure CSS ================= */}
+      {/* PURE CSS - box-shadow design */}
       <style>{`
+        :root{ --card-bg:#ffffff; --muted:#0b1220; --muted-2:#64748b; --accent-1:#6c5ce7; --accent-2:#ff7aa2; }
+
         .payment-allocation {
-          max-width: 700px;
+          max-width: 900px;
           margin: 20px auto;
-          padding: 15px;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          background: #f9f9f9;
-          font-family: Arial, sans-serif;
+          padding: 22px;
+          border-radius: 12px;
+          background: var(--card-bg);
+          font-family: Inter, Arial, sans-serif;
+          color: var(--muted);
+          box-shadow: 0 8px 24px rgba(15,23,42,0.06), 0 2px 6px rgba(15,23,42,0.03) inset;
         }
-        .form-group {
-          margin-bottom: 12px;
+
+        .payment-allocation h2, .payment-allocation h3 {
+          color: var(--muted);
+          margin-top: 0;
         }
-        .form-group label {
-          display: block;
-          margin-bottom: 4px;
-          font-weight: bold;
-        }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display:block; margin-bottom:6px; font-weight:600; color:var(--muted); }
+
         .form-group input, .form-group select {
-          width: 100%;
-          padding: 6px 8px;
-          border-radius: 4px;
-          border: 1px solid #aaa;
+          width:100%;
+          padding:10px 12px;
+          border-radius:8px;
+          border:1px solid rgba(15,23,42,0.06);
+          background:#fff;
+          box-shadow: 0 6px 18px rgba(12,16,26,0.06);
+          transition: box-shadow 160ms ease, transform 140ms ease;
+          font-size:14px;
+          color:var(--muted);
         }
-        .hajji-table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 15px;
-        }
-        .hajji-table th, .hajji-table td {
-          border: 1px solid #ccc;
-          padding: 6px 8px;
-          text-align: left;
-        }
-        .hajji-table th {
-          background: #eee;
-        }
+        .form-group input::placeholder { color: var(--muted-2); }
+        .form-group input:focus, .form-group select:focus { outline:none; transform: translateY(-2px); box-shadow: 0 12px 30px rgba(12,46,120,0.08); border-color: rgba(96,165,250,0.12); }
+
+        .hajji-table { width:100%; border-collapse:separate; border-spacing:0 10px; margin-top:18px; }
+        .hajji-table th { text-align:left; padding:10px 8px; color:var(--muted); font-weight:700; }
+        .hajji-table tbody tr { background:#fff; border-radius:8px; box-shadow: 0 6px 18px rgba(15,23,42,0.06); transition: box-shadow 160ms ease, transform 160ms ease; }
+        .hajji-table tbody tr:hover { box-shadow: 0 14px 36px rgba(15,23,42,0.10); transform: translateY(-4px); }
+        .hajji-table td { padding:12px 8px; border:none; color:var(--muted); }
+
+        .hajji-table input[type="checkbox"], .hajji-table input[type="number"] { padding:6px 8px; border-radius:6px; border:1px solid rgba(15,23,42,0.06); }
+        .hajji-table input[type="number"]:focus { box-shadow: 0 10px 28px rgba(12,46,120,0.06); }
+
         .submit-btn {
-          margin-top: 15px;
-          padding: 8px 12px;
-          border: none;
-          background: #28a745;
-          color: white;
-          border-radius: 4px;
-          cursor: pointer;
+          margin-top: 18px; padding:10px 20px; border-radius:8px; border:none; cursor:pointer; font-weight:700; color:#fff; background: linear-gradient(135deg, var(--accent-1) 0%, var(--accent-2) 100%); box-shadow: 0 10px 30px rgba(108,92,231,0.12); transition: box-shadow 160ms ease, transform 160ms ease;
         }
-        .submit-btn:hover {
-          background: #218838;
-        }
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(108,92,231,0.18); }
+
+        @media (max-width:820px){ .payment-allocation{ padding:16px } .hajji-table td{ padding:10px 6px } }
+        @media (prefers-reduced-motion: reduce){ .form-group input, .form-group select, .submit-btn, .hajji-table tbody tr { transition:none !important; transform:none !important; } }
       `}</style>
     </div>
   );
