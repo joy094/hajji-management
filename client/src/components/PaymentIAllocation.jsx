@@ -97,6 +97,15 @@ export default function PaymentAllocation() {
     },
   ];
 
+  // Normalize reference numbers (statement / transaction / receipt)
+  const normalizeRef = (value = "") => {
+    return value
+      .toString()
+      .toLowerCase() // case-insensitive
+      .replace(/[^a-z0-9]/g, "") // remove space + special symbols
+      .trim();
+  };
+
   // Fetch Hajji List
   useEffect(() => {
     axios
@@ -180,7 +189,8 @@ export default function PaymentAllocation() {
         alert("Statement No & Bank Name required");
         return;
       }
-      payload.statementNo = statementNo.toString().trim();
+      payload.statementNo = normalizeRef(statementNo);
+      payload.statementNoRaw = statementNo.toString().trim(); // optional
       payload.bankName = bankName.toString().trim();
     } else if (paymentType === "mobile") {
       if (
@@ -192,14 +202,16 @@ export default function PaymentAllocation() {
         alert("Transaction ID & Mobile Bank required");
         return;
       }
-      payload.transactionId = transactionId.toString().trim();
+      payload.transactionId = normalizeRef(transactionId);
+      payload.transactionIdRaw = transactionId.toString().trim(); // optional
       payload.mobileBank = mobileBank.toString().trim();
     } else if (paymentType === "cash") {
       if (!receiptName || !receiptName.toString().trim()) {
         alert("Receipt Number required");
         return;
       }
-      payload.receiptName = receiptName.toString().trim();
+      payload.receiptName = normalizeRef(receiptName);
+      payload.receiptNameRaw = receiptName.toString().trim(); // optional
     }
 
     try {
