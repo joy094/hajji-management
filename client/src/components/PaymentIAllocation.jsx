@@ -171,25 +171,35 @@ export default function PaymentAllocation() {
     };
 
     if (paymentType === "bank") {
-      if (!statementNo || !bankName) {
+      if (
+        !statementNo ||
+        !statementNo.toString().trim() ||
+        !bankName ||
+        !bankName.toString().trim()
+      ) {
         alert("Statement No & Bank Name required");
         return;
       }
-      payload.statementNo = statementNo;
-      payload.bankName = bankName;
+      payload.statementNo = statementNo.toString().trim();
+      payload.bankName = bankName.toString().trim();
     } else if (paymentType === "mobile") {
-      if (!transactionId || !mobileBank) {
+      if (
+        !transactionId ||
+        !transactionId.toString().trim() ||
+        !mobileBank ||
+        !mobileBank.toString().trim()
+      ) {
         alert("Transaction ID & Mobile Bank required");
         return;
       }
-      payload.transactionId = transactionId;
-      payload.mobileBank = mobileBank;
+      payload.transactionId = transactionId.toString().trim();
+      payload.mobileBank = mobileBank.toString().trim();
     } else if (paymentType === "cash") {
-      if (!receiptName) {
+      if (!receiptName || !receiptName.toString().trim()) {
         alert("Receipt Number required");
         return;
       }
-      payload.receiptName = receiptName;
+      payload.receiptName = receiptName.toString().trim();
     }
 
     try {

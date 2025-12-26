@@ -32,11 +32,11 @@ const Header = () => {
   return (
     <header>
       <nav className="nav">
-        <NavLink to="/" className="nav-link">
+        {/* <NavLink to="/" className="nav-link">
           Agency Management
-        </NavLink>
+        </NavLink> */}
 
-        <NavLink to="/dashboard" className="nav-link">
+        <NavLink to="/" className="nav-link">
           Dashboard
         </NavLink>
 
@@ -101,8 +101,8 @@ const App = () => {
           {/* <Route path="/login" element={<Login />} /> */}
           {/* <Route path="/fogot-password" element={<ForgotPassword />} /> */}
           {/* <Route path="/make-nid" element={<MakeNid />} /> */}
-          <Route path="/" element={<AgencyManagement />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          {/* <Route path="/" element={<AgencyManagement />} /> */}
+          <Route path="/" element={<Dashboard />} />
           <Route path="/agency-list" element={<AgencyList />} />
           <Route path="/agency/:id" element={<AgencyProfile />} />
 

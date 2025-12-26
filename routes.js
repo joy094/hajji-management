@@ -179,17 +179,31 @@ router.post("/payments/allocate", async (req, res) => {
       return res.status(400).json({ error: "Invalid data" });
     }
 
+    // normalize helper: trim + uppercase strings (preserves special chars inside)
+    const normalize = (v) =>
+      typeof v === "string" ? v.trim().toUpperCase() : v;
+
     let statement = null;
 
     // 1️⃣ Bank Payment
     if (paymentType === "bank") {
-      if (!statementNo || !bankName) {
+      if (
+        !statementNo ||
+        !statementNo.toString().trim() ||
+        !bankName ||
+        !bankName.toString().trim()
+      ) {
         return res
           .status(400)
           .json({ error: "Bank StatementNo & BankName required" });
       }
 
-      const existing = await BankStatement.findOne({ statementNo });
+      const normalizedStatementNo = normalize(statementNo);
+
+      // check duplicates against normalized value
+      const existing = await BankStatement.findOne({
+        statementNo: normalizedStatementNo,
+      });
       if (existing) {
         return res.status(400).json({ error: "Statement already used" });
       }
@@ -197,8 +211,8 @@ router.post("/payments/allocate", async (req, res) => {
       const totalAmount = allocations.reduce((sum, a) => sum + a.amount, 0);
 
       statement = await BankStatement.create({
-        statementNo,
-        bankName,
+        statementNo: normalizedStatementNo,
+        bankName: bankName.toString().trim(),
         statementDate: new Date(),
         totalAmount,
         allocatedAmount: 0,
@@ -208,17 +222,32 @@ router.post("/payments/allocate", async (req, res) => {
 
     // 2️⃣ Mobile Payment
     if (paymentType === "mobile") {
-      if (!transactionId || !mobileBank) {
+      if (
+        !transactionId ||
+        !transactionId.toString().trim() ||
+        !mobileBank ||
+        !mobileBank.toString().trim()
+      ) {
         return res
           .status(400)
           .json({ error: "TransactionId & MobileBank required" });
       }
 
+      const normalizedTxn = normalize(transactionId);
+
+      // if transaction id already used - block
+      const existingTxn = await BankStatement.findOne({
+        transactionId: normalizedTxn,
+      });
+      if (existingTxn)
+        return res.status(400).json({ error: "Transaction already used" });
+
       const totalAmount = allocations.reduce((sum, a) => sum + a.amount, 0);
 
       statement = await BankStatement.create({
         statementNo: "MOB-" + Date.now(),
-        bankName: mobileBank,
+        bankName: mobileBank.toString().trim(),
+        transactionId: normalizedTxn,
         statementDate: new Date(),
         totalAmount,
         allocatedAmount: 0,
@@ -229,15 +258,24 @@ router.post("/payments/allocate", async (req, res) => {
 
     // 3️⃣ Cash Payment
     if (paymentType === "cash") {
-      if (!receiptName) {
+      if (!receiptName || !receiptName.toString().trim()) {
         return res.status(400).json({ error: "ReceiptName required" });
       }
+
+      const normalizedReceipt = normalize(receiptName);
+
+      const existingReceipt = await BankStatement.findOne({
+        receiptName: normalizedReceipt,
+      });
+      if (existingReceipt)
+        return res.status(400).json({ error: "Receipt already used" });
 
       const totalAmount = allocations.reduce((sum, a) => sum + a.amount, 0);
 
       statement = await BankStatement.create({
         statementNo: "CASH-" + Date.now(),
-        bankName: receiptName,
+        bankName: receiptName.toString().trim(),
+        receiptName: normalizedReceipt,
         statementDate: new Date(),
         totalAmount,
         allocatedAmount: 0,
@@ -286,7 +324,21 @@ router.post("/payments/allocate", async (req, res) => {
 
     res.json({ success: true, message: "Payment allocated successfully" });
   } catch (err) {
-    console.error("Server error:", err.message);
+    console.error("Server error:", err);
+    // Handle Mongo duplicate key errors for unique fields
+    if (err && err.code === 11000) {
+      const dupKey = Object.keys(err.keyValue || {})[0];
+      if (dupKey === "statementNo")
+        return res.status(400).json({ error: "Statement already used" });
+      if (dupKey === "transactionId")
+        return res.status(400).json({ error: "Transaction already used" });
+      if (dupKey === "receiptName")
+        return res.status(400).json({ error: "Receipt already used" });
+      // generic duplicate
+      return res
+        .status(400)
+        .json({ error: "Duplicate identifier already used" });
+    }
     res.status(500).json({ error: "Server error" });
   }
 });

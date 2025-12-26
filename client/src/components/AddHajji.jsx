@@ -103,7 +103,7 @@ export default function AddHajji() {
           required
         />
 
-        <label>Passport Number</label>
+        <label>NID/Tracking No/Passport Number</label>
         <input
           name="passportNumber"
           value={form.passportNumber}

@@ -86,6 +86,21 @@ const BankStatementSchema = new Schema(
       uppercase: true,
       trim: true,
     },
+    // Optional identifiers for mobile / cash payments (unique when present)
+    transactionId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
+    receiptName: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
     bankName: String,
     statementDate: {
       type: Date,
